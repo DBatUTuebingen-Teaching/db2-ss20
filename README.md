@@ -11,7 +11,7 @@ In diesem Repository veröffentlichen wir
 
 Nähere Infos zur Organisation der Veranstaltung findet ihr
 
-- im **[Handout zum Übungsbetrieb](https://raw.githubusercontent.com/DBatUTuebingen/db2-ss20/master/git-handout.pdf)** mit `git`
+- im **[Handout zum Übungsbetrieb](https://github.com/DBatUTuebingen/db2-ss20/blob/master/handout-git.pdf)** mit `git`
     (Aus- und Abgabe von Übungsblättern)
 
 - im **[Forum zur Veranstaltung](https://forum-db.informatik.uni-tuebingen.de/c/ss20-db2/)**
