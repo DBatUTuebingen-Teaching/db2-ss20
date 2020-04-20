@@ -2,11 +2,11 @@
 
 In diesem Repository veröffentlichen wir
 
-- **Slides** und ergänzende **Materialien** zu Vorlesung (Verzeichnis [https://github.com/DBatUTuebingen/db2-ss20/tree/master/lectures](`lectures`))
+- **Slides** und ergänzende **Materialien** zu Vorlesung (Verzeichnis [`lectures`](https://github.com/DBatUTuebingen/db2-ss20/tree/master/lectures))
 
-- Die wöchentlichen **Übungsblätter** (Verzeichnis [https://github.com/DBatUTuebingen/db2-ss20/tree/master/assignments](`assignments`))
+- Die wöchentlichen **Übungsblätter** (Verzeichnis [`assignments`](https://github.com/DBatUTuebingen/db2-ss20/tree/master/assignments))
 
-- Hinweise zur Installation von _PostgreSQL_ und _MonetDB_ mit _Docker Compose_ (Verzeichnis [https://github.com/DBatUTuebingen/db2-ss20/tree/master/software](`software`))
+- Hinweise zur Installation von _PostgreSQL_ und _MonetDB_ mit _Docker Compose_ (Verzeichnis [`software`](https://github.com/DBatUTuebingen/db2-ss20/tree/master/software))
 
 
 Nähere Infos zur Organisation der Veranstaltung findet ihr
