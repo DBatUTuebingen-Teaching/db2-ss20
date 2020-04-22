@@ -140,9 +140,11 @@ FROM   pg_freespace('unary');
 
 TABLE unary;
 
+SELECT u.ctid, u.a
+FROM   unary AS u;
 
 -- Perform a full vacuum run on table unary to reorganize the rows in the
--- heap file such that now space is wasted (remove all "holes" on the
+-- heap file such that no space is wasted (remove all "holes" on the
 -- pages):
 VACUUM (VERBOSE, FULL) unary;
 SELECT *
@@ -151,4 +153,5 @@ FROM   pg_freespace('unary');
 -- Such a full vacuum run in fact creates a new heap file and marks the
 -- old heap file as obsolete (OS file system can remove the file):
 SELECT relfilenode, relname
-FROM   pg_class WHERE relname = 'unary';
+FROM   pg_class
+WHERE relname = 'unary';
