@@ -1,5 +1,5 @@
 
-(#) Docker Installation
+# Docker Installation
 
 1. First you have to install the _Docker Engine_, which is available on Linux, macOS, and Windows 10.
 
@@ -26,7 +26,7 @@
   docker-compose version 1.25.4, build 8d51620a
   ~~~
 
-(#) Setup Postgres
+# Setup Postgres
 
 If everything is installed correctly, open a terminal session and change directory to where the docker-compose.yml file is located.
 
@@ -34,7 +34,7 @@ To start the database systems PostgreSQL12 and MonetDB use `docker-compose up -d
 
 ⚠ To stop the services use `docker-compose down` or `docker-compose down -v` IFF you want to delete all database files as well.
 
-(##) Create a new user
+## Create a new user
 
 To get things started, create a new user and a database. Make sure the PostgreSQL server is running before you start. Use `docker-compose ps -a` to do so.
 
