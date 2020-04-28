@@ -2,17 +2,12 @@
 # Docker Installation
 
 1. First you have to install the _Docker Engine_, which is available on Linux, macOS, and Windows 10.
-
   For instructions, checkout: https://docs.docker.com/engine/install/
-
   For macOS, and Windows 10, install the Docker Desktop App.
 
 2. Install Docker-Compose
-
   If you are Linux based, you have to install Docker-Compose separately.
-
   Instructions can be found here: https://docs.docker.com/compose/install/
-
 
 3. Check your installation.
   
@@ -50,3 +45,47 @@ CREATE DATABASE root;
 ~~~
 
 You can now use `docker exec -it pg12 psql` without the `-U` and `-d` flags.
+
+# Howto use MonetDB
+
+To enter the docker container, use `docker exec -it monetdb bash`
+
+## Create a Database
+
+Create a new database `db2` (and release it to "operational mode") with the following commands:
+
+```
+$ monetdb create db2
+$ monetdb release db2
+```
+
+## Start the _MonetDB Client_
+
+Connect as user `monetdb` to the database `db2` using the `mclient` tool (the default password is `monetdb`):
+```
+$ mclient -u monetdb -d db2
+password: monetdb
+```
+
+### Language: _SQL_
+From within the client, run some first _SQL_ queries to create and show table `test`:
+```sql
+sql>CREATE TABLE test (x int);
+sql>INSERT INTO test VALUES (1),(10);
+sql>SELECT * FROM test;
+```
+
+### Language: _MAL_
+To start a client session accepting _MAL_ code instead of _SQL_ use the argument `-l mal`:
+```bash
+$ mclient -u monetdb -d db2 -l mal
+password: monetdb
+```
+and enter the following _MAL_ program to print the _BAT_ of column `x` of table `test`:
+```
+sql.init();
+c := sql.mvc();
+x:bat[:int] := sql.bind(c, "sys", "test", "x", 0);
+io.print(x);
+```
+
