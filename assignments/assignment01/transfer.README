@@ -1,0 +1,13 @@
+transfer.c
+
+Measure DRAM memory bandwidth: how long does it take to write 4 GB
+of data into RAM?
+
+Compile via
+
+  cc -Wall -O2 transfer.c -o transfer
+
+Execute via
+
+  ./transfer
+
