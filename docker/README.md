@@ -49,4 +49,4 @@ CREATE DATABASE root;
 \q
 ~~~
 
-You can now use `docker exec -it psql` without the `-U` and `-d` flags.
+You can now use `docker exec -it pg12 psql` without the `-U` and `-d` flags.
