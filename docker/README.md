@@ -76,9 +76,9 @@ sql>SELECT * FROM test;
 ```
 
 ### Language: _MAL_
-To start a client session accepting _MAL_ code instead of _SQL_ use the argument `-l mal`:
+To start a client session accepting _MAL_ code instead of _SQL_ use the argument `-l msql`:
 ```bash
-$ mclient -u monetdb -d db2 -l mal
+$ mclient -u monetdb -d db2 -l msql
 password: monetdb
 ```
 and enter the following _MAL_ program to print the _BAT_ of column `x` of table `test`:
