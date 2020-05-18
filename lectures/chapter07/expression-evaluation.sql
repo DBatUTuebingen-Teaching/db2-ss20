@@ -14,6 +14,8 @@ EXPLAIN VERBOSE
          ceil(t.c / log(2))   AS bits
   FROM   ternary AS t;
 
+
+
 -----------------------------------------------------------------------
 -- ⚠️ The experiment below requires operational JIT support in your
 --    PostgreSQL server (version 11 or later required, server compiled
@@ -73,15 +75,6 @@ set jit_optimize_above_cost = 10000;  --    (indeed due to expression evaluation
 
 -- JIT compilation now consumes ≈5% of the overall execution time.  Observing
 -- a performance improvement of about 20% due to JIT compilation.
-EXPLAIN ANALYZE VERBOSE
-  SELECT t.a * 3 - t.a * 2    AS a,
-         t.a - power(10, t.c) AS diff,
-         ceil(t.c / log(2))   AS bits
-  FROM   ternary_2M AS t;
-
--- Repeat experiments with JIT forced off:
-set jit = off;
-
 EXPLAIN ANALYZE VERBOSE
   SELECT t.a * 3 - t.a * 2    AS a,
          t.a - power(10, t.c) AS diff,

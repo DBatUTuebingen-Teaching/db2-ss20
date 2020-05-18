@@ -3,7 +3,7 @@
 #include <assert.h>
 
 /* Only if SIZE is divisble by 8, send() will do its job correctly */
-#define SIZE 254
+#define SIZE 255
 
 /* Eight-fold unrolled loop, copying 'count' ints from 'from' to 'to'.
 
@@ -26,7 +26,7 @@ void send(int *to, int *from, int count)
    /* To correct send(), we would need the following epilogue loop:
    n = count % 8;
    while (n-- > 0) {
-        *to++ = *from++; c++;
+        *to++ = *from++;
    }
    */
 }
