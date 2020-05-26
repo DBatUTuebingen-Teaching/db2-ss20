@@ -1,6 +1,6 @@
 -- create table orders with the TPC-H schema (without key constraints)
 DROP TABLE IF EXISTS orders_tmp;
-CREATE TABLE orders_tmp(
+CREATE TEMP TABLE orders_tmp(
   o_orderkey       integer not null,
   o_custkey        integer not null,
   o_orderstatus    char(1) not null,
@@ -30,7 +30,7 @@ CREATE TABLE orders AS
           o_shippriority   ,
           o_comment        ,
           o_fill        
-    FROM orders2;
+    FROM orders_tmp;
 
 
 -- create an unclustered index on attribute o_orderkey.

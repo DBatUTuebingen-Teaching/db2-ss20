@@ -8,8 +8,6 @@ CREATE OR REPLACE FUNCTION run(n int) RETURNS VOID
 AS $$
 DECLARE
     key int;
-    idx_filenode int;
-    heap_filenode int;
 BEGIN
     -- create a table to store the measurements.
     DROP TABLE IF EXISTS results;
