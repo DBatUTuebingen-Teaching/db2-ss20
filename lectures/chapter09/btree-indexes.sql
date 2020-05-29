@@ -276,7 +276,7 @@ show work_mem;
 EXPLAIN (VERBOSE, ANALYZE)
   SELECT i.a, i.b
   FROM   indexed AS i
-  WHERE i.c = 0.42;
+  WHERE  i.c = 0.42;
 
 
 -- Repeat query with severely restriced working memory
@@ -287,7 +287,7 @@ set enable_indexscan = off;
 EXPLAIN (VERBOSE, ANALYZE)
   SELECT i.a, i.b
   FROM   indexed AS i
-  WHERE i.c = 0.42;
+  WHERE  i.c = 0.42;
 
 -- Back to normal configuration
 reset work_mem;
@@ -302,7 +302,7 @@ reset enable_indexscan;
 EXPLAIN (VERBOSE, ANALYZE)
   SELECT i.a, i.b
   FROM   indexed AS i
-  WHERE i.c = 0.42;
+  WHERE  i.c = 0.42;
 
 
 -- Recluster table 'indexed' based on index 'indexed_c', writes a new heap file
@@ -327,16 +327,6 @@ LIMIT 10;
 
 -- Determine the clustering factor for columns c and a
 -- (⚠️ homework assignment):
-                  SELECT 100.0 * COUNT(*) FILTER (WHERE ordered) / COUNT(*) AS clustering_factor
-                  FROM   (SELECT page_of(i.ctid) -
-                                 LAG(page_of(i.ctid), 1, 0::bigint) OVER (ORDER BY i.c) IN (0,1) AS ordered
-                          FROM   indexed AS i) AS _;                              -- 🠵
-
-
-                  SELECT 100.0 * COUNT(*) FILTER (WHERE ordered) / COUNT(*) AS clustering_factor
-                  FROM   (SELECT page_of(i.ctid) -
-                                 LAG(page_of(i.ctid), 1, 0::bigint) OVER (ORDER BY i.a) IN (0,1) AS ordered
-                          FROM   indexed AS i) AS _;                              -- 🠵
 
 
 -- Repeat query (Bitmap Index Scan will now touch less blocks)
