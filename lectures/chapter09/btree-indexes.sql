@@ -350,21 +350,26 @@ EXPLAIN (VERBOSE, ANALYZE)
 -- populating the associated table.
 
 -- 1. Populate table, then create index
+
+-- ➊ Create empty table (no index created yet)
 DROP TABLE IF EXISTS indexed;
 CREATE TABLE indexed (a int, b text, c numeric(3,2));  -- no PRIMARY KEY!
-
+-- ➋ Populate table
+--   (rows probably placed in heap file ascending 'a' order)
 INSERT INTO indexed(a,b,c)
   SELECT i, md5(i::text), sin(i)
   FROM   generate_series(1,5000000) AS i;
-
-CREATE INDEX indexed_a ON indexed USING btree (a);     -- performs index bulk load (*)
+-- ➌ Create index, then loads all rows (ascending key order ⇒ bulk load fast path!)
+CREATE INDEX indexed_a ON indexed USING btree (a);  -- (*)
 
 -- 2. Create index, then populate table
+
+-- ➊ Create empty table (no index created yet)
 DROP TABLE IF EXISTS indexed;
 CREATE TABLE indexed (a int, b text, c numeric(3,2));  -- no PRIMARY KEY!
-
+-- ➋ Create empty index
 CREATE INDEX indexed_a ON indexed USING btree (a);
-
+-- ➌ Populate table (also populates index)
 INSERT INTO indexed(a,b,c)
   SELECT i, md5(i::text), sin(i)
   FROM   generate_series(1,5000000) AS i;
@@ -372,15 +377,21 @@ INSERT INTO indexed(a,b,c)
 
 -- Now make life hard for PostgreSQL and insert keys in *descending*
 -- order, we cannot benefit from the bulk loading fast path.
+
+-- ➊ Create empty table (no index created yet)
 DROP TABLE IF EXISTS indexed;
 CREATE TABLE indexed (a int, b text, c numeric(3,2));
-
+-- ➋ Populate table
+--   (rows probably placed in heap file descending 'a' order)
 INSERT INTO indexed(a,b,c)
   SELECT i, md5(i::text), sin(i)
   FROM   generate_series(5000000,1,-1) AS i; -- descending order keys in heap file
+-- ➌ Create index, then loads all rows (descending key order)
+CREATE INDEX indexed_a ON indexed USING btree (a);  -- slower than (*)
 
+
+-- Resulting index is not clustered indeed (row order ≠ index key 'a' order)
 SELECT i.ctid, i.*
 FROM   indexed AS i
 LIMIT  10;
 
-CREATE INDEX indexed_a ON indexed USING btree (a);  -- slower than (*)
