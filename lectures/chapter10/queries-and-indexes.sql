@@ -13,6 +13,8 @@ INSERT INTO indexed(a,b,c)
 
 ANALYZE indexed;
 
+\d indexed
+
 -- ➊ In the absence of an function-based index, this query
 --   will be evaluated by a Seq Scan
 EXPLAIN VERBOSE
@@ -177,9 +179,9 @@ ANALYZE indexed;
 
 -- ➋ Modify parameter m to render p2 more and more selective such that
 --   PostgreSQL switches from using index (c,a) to (a,c).  Can perform
---   binary search regarding 𝑚 to find switch point.
+--   binary search regarding m to find switch point.
 
-EXPLAIN (VERBOSE, ANALYZE)
+EXPLAIN
   SELECT i.b
   FROM   indexed AS i
   WHERE  i.c BETWEEN 0.00 AND 0.01  -- p1 more selective
@@ -224,7 +226,22 @@ INSERT INTO parts(p,a,b,c)
   FROM   generate_series(1,100000) AS i;
 
 
--- ➍ Merge partition #1, #2 into main partition
+-- ➍ Predicates that refer to column "a" will still be evaluated
+--   using the "parts_p_a" index.  Rows participating in the query
+--   (e.g., all rows/only recent rows/...) can be selected on a
+--   by-partition basis.
+--
+--   (For an explanation of the BitmapOr operator you will find in
+--    the plan, check DB2 Video #53.)
+EXPLAIN (VERBOSE, ANALYZE, BUFFERS)
+  SELECT MAX(p.c)
+  FROM   parts AS p
+  WHERE  (p.p = 0 OR p.p = 1) AND p.a BETWEEN 0 AND 42;
+  --     └──────────────────┘     └──────────────────┘
+  --      select partition(s)      original predicate
+
+
+-- ➎ Merge partition #1, #2 into main partition
 UPDATE parts AS p
 SET    p = 0 -- 🠴 merge partition 1 into main partition 0
 WHERE  p.p = 1;
@@ -255,6 +272,10 @@ EXPLAIN (VERBOSE, ANALYZE, BUFFERS)
   FROM   indexed AS i
   WHERE  i.c BETWEEN 0.00 AND 0.01
      OR  i.a BETWEEN 0 AND 4000;
+
+
+-- (See ➍ in the discussion of Partitioned B+Trees above for another
+--  query example that employs BitmapOr.)
 
 
 -- ➌ BitmapOr + two Bitmap Index Scans indeed pays off
