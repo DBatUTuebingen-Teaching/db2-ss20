@@ -6,7 +6,7 @@ Teams, für die keine Namen und Matrikelnummern eingetragen sind könen nicht be
 
 |   | Nachname | Vorname | Matrikelnummer | Studienfach | Studiengang (B.Sc., M.Sc, ...) | Forum Username | Studentische E-Mail       |
 |---|----------|---------|----------------|-------------|--------------------------------|----------------|---------------------------|
-| 1.|          |         |                |             |                                |                | @student.uni-tuebingen.de |
+| 1.|Khan      |Ali Imdad|4151272         |Informatik   |B.Sc                            |aliimdadkhan    | ali-imdad.khan@student.uni-tuebingen.de |
 | 2.|          |         |                |             |                                |                | @student.uni-tuebingen.de |
   
 ## Übersicht Punktestand (wird von den Tutoren angepasst)
