@@ -256,8 +256,8 @@ WHERE  p.p = 2;
 -- multiple separate indexes.
 
 -- ➊ Prepare separate indexes on columns "a" and "c"
-DROP INDEX indexed_a_c;
-DROP INDEX indexed_c_a;
+DROP INDEX IF EXISTS indexed_a_c;
+DROP INDEX IF EXISTS indexed_c_a;
 
 CREATE INDEX indexed_a ON indexed USING btree (a);
 CREATE INDEX indexed_c ON indexed USING btree (c);
@@ -304,6 +304,7 @@ ANALYZE indexed;
 -- Recall the contents of column "b"
 SELECT i.b
 FROM   indexed AS i
+ORDER BY i.b
 LIMIT  10;
 
 -- ➊ Leading % wildcard: low selectivity
@@ -332,7 +333,7 @@ EXPLAIN (VERBOSE, ANALYZE, BUFFERS)
 -- Cconstruction and matching of a *partial* index on
 -- table "indexed".
 
--- ➊ Create partial index: a row is "hot" if its c values exceeds 0.5
+-- ➊ Create partial index: a row is "hot" if its c value exceeds 0.5
 CREATE INDEX indexed_partial_a ON indexed USING btree (a)
   WHERE c >= 0.5;
 ANALYZE indexed;
@@ -495,6 +496,7 @@ INSERT INTO indexed(a,b,c)
 ALTER TABLE indexed DROP CONSTRAINT indexed_pkey;
 CREATE INDEX indexed_c_a ON indexed USING btree (c,a);
 ANALYZE indexed;
+VACUUM indexed;
 
 \d indexed
 
@@ -544,10 +546,10 @@ EXPLAIN (VERBOSE, ANALYZE)
 
 
 -- ➍ supported
-  EXPLAIN (VERBOSE, ANALYZE)
-    SELECT i.*
-    FROM   indexed AS i
-    ORDER BY i.c DESC, i.a DESC;
+EXPLAIN (VERBOSE, ANALYZE)
+  SELECT i.*
+  FROM   indexed AS i
+  ORDER BY i.c DESC, i.a DESC;
 
 
 -- ➎ not supported
@@ -592,7 +594,7 @@ EXPLAIN (VERBOSE, ANALYZE)
 reset enable_bitmapscan;
 
 -----------------------------------------------------------------------
--- Efficiently paging through a table (NO OFFSET!)
+-- Efficiently paging through a table
 
 \set rows_per_page 10
 
@@ -613,8 +615,10 @@ CREATE INDEX connections_when_id
   ON connections USING btree ("when", id);
 ANALYZE connections;
 
+\d connections
 
 TABLE connections
+ORDER BY "when", id
 LIMIT 10;
 
 -- Paging implementation option ➊: Using OFFSET and LIMIT
@@ -640,7 +644,9 @@ EXPLAIN (VERBOSE, ANALYZE)
   LIMIT  :rows_per_page;
 
 
--- Paging implementation option ➋: Using WHERE and LIMIT
+
+
+-- Paging implementation option ➋: Using WHERE and LIMIT (NO OFFSET!)
 
 -- Initialization: first connection is where we start browsing (page #0),
 -- set :last_when, :last_id to that first connection
@@ -652,7 +658,7 @@ LIMIT 1;
 --  sets :last_when, :last_id
 \gset last_
 
--- Now produce first page of connections
+-- Query submitted by the Web app: produce one page of connections
 EXPLAIN (VERBOSE, ANALYZE)
   SELECT c.*
   FROM   connections AS c
@@ -660,21 +666,26 @@ EXPLAIN (VERBOSE, ANALYZE)
   ORDER BY c."when", c.id  --  🠴 ORDER BY spec matches index scan order
   LIMIT  :rows_per_page;
 
--- Produce next page of connections (can repeat this query to continue paging)
--- (⚠️ in this query EITHER use \gset OR EXPLAIN)
-EXPLAIN (VERBOSE, ANALYZE)
-  WITH connections_page(id, "when", destination) AS (
-    SELECT c.*                                            -- original paging query
-    FROM   connections AS c                               --
-    WHERE  (c."when", c.id) > (:'last_when', :last_id)    --
-    ORDER BY c."when", c.id                               --
-    LIMIT  :rows_per_page                                 --
-  )
-  SELECT c."when", c.id                                   -- extract last row displayed on
-  FROM   connections_page AS c                            -- last page to continue paging
-  ORDER BY c."when" DESC, c.id DESC                       -- from that row later on
-  LIMIT 1;                                                --
 
--- update :last_when, :last_id based on largest row (latest connection)
--- displayed in last page, can now re-invoke WITH CTE to continue paging
+-- Now pick a late connection (almost) at the end of the connection
+-- table, again set :last_when, :last_id to that first connection.
+SELECT c."when", c.id
+FROM   (SELECT c.*
+        FROM   connections AS c
+        ORDER BY c."when" DESC, c.id DESC
+        LIMIT :rows_per_page) AS c
+ORDER BY c."when", c.id
+LIMIT 1;
+
+--  sets :last_when, :last_id
 \gset last_
+
+
+-- Query submitted by the Web app: produce one page of connections
+EXPLAIN (VERBOSE, ANALYZE)
+  SELECT c.*
+  FROM   connections AS c
+  WHERE  (c."when", c.id) >= (:'last_when', :last_id)
+  ORDER BY c."when", c.id  --  🠴 ORDER BY spec matches index scan order
+  LIMIT  :rows_per_page;
+
