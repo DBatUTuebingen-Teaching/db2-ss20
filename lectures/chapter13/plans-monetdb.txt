@@ -42,7 +42,7 @@ PLAN
 
 
 -- ➌ MAL code for Q₁₂
--- (follows post-order traversal ov above plan tree, column BATs one.b/many.b never accessed)
+-- (follows post-order traversal of above plan tree, column BATs one.b/many.b never accessed)
 EXPLAIN
   SELECT o.a, COUNT(*) AS "#"
   FROM   one AS o, many AS m

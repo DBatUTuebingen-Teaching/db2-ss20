@@ -110,6 +110,14 @@ reset enable_hashagg;
 \d many
 
 
+-- The plan for this query features a blocking SORT operator
+-- to implement SQL's DISTINCT:
+EXPLAIN
+  SELECT DISTINCT o.a, o.b || m.b AS md5
+  FROM   one AS o, many AS m
+  WHERE o.a = m.a;
+
+
 -- ➋ Declare/fetch/close cursor for join query (within a SQL transaction)
 
 \set ON_ERROR_ROLLBACK interactive
@@ -141,7 +149,7 @@ EXPLAIN
   SELECT i FROM generate_series(1,3) AS i
     UNION ALL
   (SELECT i
-   FROM   generate_series(10000000,4,-1) AS i
+   FROM   generate_series(5000000,4,-1) AS i
    ORDER BY i
    LIMIT 3);
 
@@ -151,7 +159,7 @@ DECLARE pipeline CURSOR FOR
   SELECT i FROM generate_series(1,3) AS i
     UNION ALL
   (SELECT i
-   FROM   generate_series(10000000,4,-1) AS i
+   FROM   generate_series(5000000,4,-1) AS i
    ORDER BY i
    LIMIT 3);
 
