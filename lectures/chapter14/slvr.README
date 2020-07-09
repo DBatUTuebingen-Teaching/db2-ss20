@@ -1,0 +1,9 @@
+The *.slvr JSON files can be read by the interactive calculator
+Soulver3. Soulver3 evaluates arithmetic expressions, binds variables,
+and immediately recalculates the value of all expressions/variables in
+the file on any edit (think spreadsheet, but in a textual format).
+
+Soulver3 (macOS only): https://soulver.app
+
+[Is this needed to follow the chapter?  No — these files do not contain
+ anything beyond the material shown on the slides.]
