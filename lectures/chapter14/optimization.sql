@@ -223,6 +223,7 @@ EXPLAIN (VERBOSE, ANALYZE)
  SELECT t.a!
  FROM   ternary AS t;
 
+
 -----------------------------------------------------------------------
 -- Demonstrate the cost derivation for Seq Scan on table "indexed"
 
@@ -313,3 +314,120 @@ EXPLAIN VERBOSE
   FROM indexed AS i
   WHERE i.a <= 100000;
 
+-- See Soulver file simple_Seq_Scan.slvr
+
+
+-- ➏ Simple Seq Scan (with complex subquery filter)
+
+EXPLAIN (VERBOSE, ANALYZE)
+    SELECT i.a
+    FROM indexed AS i
+    WHERE i.a <= (SELECT AVG(i.a) FROM indexed AS i);
+
+/*
+
+- Complex predicate i.a <= (SELECT AVG(i.a) FROM indexed AS i):
+  - startup_cost(i.a <= (SELECT AVG(i.a) FROM indexed AS i))
+      = run_cost(SELECT AVG(i.a) FROM indexed AS i)
+      = 21846.01
+  - run_cost(i.a <= (SELECT AVG(i.a) FROM indexed AS i))
+      = 2 × cpu_operator_cost 🠴 · :: numeric, · <= $0 ($0 is a constant once InitPlan 1 has been evaluated)
+      = 2 × 0.0025
+  - sel(i.a <= (SELECT AVG(i.a) FROM indexed AS i) = 333333 / 1000000 = 0.33 🠴 ⚠ arbitrary (1/3)
+                                                                        (true selectivity: ≈ 1/2)
+
+
+- startup_cost  = startup_cost(pred) + startup_cost(expr)
+                = 21846.01 + 0
+                = 21846.01 ✔︎
+
+- cpu_run_cost  =   #rows(indexed) × (cpu_tuple_cost + run_cost(pred))
+                  + #rows(indexed) × sel(pred) × run_cost(expr)
+                =   10⁶ × (0.01 + 2 × 0.0025)
+                  + 10⁶ × 0.33 × 0
+                = 15000.0
+
+- disk_run_cost = #pages(indexed) × seq_page_cost
+                = 9346 × 1.0
+                = 9346.00
+
+- total_cost    = startup_cost + cpu_run_cost + disk_run_cost
+                = 21846.01 + 15000.0 + 9346.00
+                = 46192.01 ✔︎
+
+*/
+
+reset enable_indexscan;
+reset enable_bitmapscan;
+
+
+-----------------------------------------------------------------------
+-- Demonstrate the cost derivation for Index Scan on table "indexed"
+
+-- ➊ Prepare input table and indexes
+CREATE INDEX indexed_c ON indexed USING btree (c);
+CLUSTER indexed USING indexed_c;
+ANALYZE indexed;
+
+\d indexed
+
+
+-- ➋ Obtain meta data about table indexed
+SELECT relname, reltuples AS "#rows(･)", relpages AS "#pages(･)"
+FROM   pg_class
+WHERE  relname LIKE 'indexed%';
+
+
+SELECT correlation AS "corr(indexed_a)"
+FROM   pg_stats
+WHERE  tablename = 'indexed' AND attname = 'a';
+
+
+SELECT level AS "h(indexed_a)"
+FROM   bt_metap('indexed_a');
+
+
+-- ➌ Enforce an index range scan over a NON-CLUSTERED index
+--   (cf. with Seq Scan query ➎ above which had significantly lower cost)
+set enable_bitmapscan = off;
+set enable_seqscan = off;
+
+EXPLAIN VERBOSE
+  SELECT i.c * 2 + 1
+  FROM indexed AS i
+  WHERE i.a <= 100000;
+
+-- See Soulver file Index_Scan.slvr
+
+
+-- ➍ Perform a index range scan over a CLUSTERED index
+--   (cf. with Seq Scan query ➎ above which had significantly higher cost)
+CLUSTER indexed USING indexed_a;
+ANALYZE indexed;
+
+SELECT correlation AS "corr(indexed_a)"
+FROM   pg_stats
+WHERE  tablename = 'indexed' AND attname = 'a';
+
+EXPLAIN VERBOSE
+  SELECT i.c * 2 + 1
+  FROM indexed AS i
+  WHERE i.a <= 100000;
+
+-- See Soulver file Index_Scan.slvr
+
+
+-- ➎ Perform index-ONLY scan over an index
+
+-- make sure dead rows are removed (visibility map update)
+VACUUM;
+
+EXPLAIN VERBOSE
+  SELECT i.a * 2 + 1         -- NB: accesses column "a" only
+  FROM indexed AS i
+  WHERE i.a <= 100000;
+
+-- See Soulver file Index_Scan.slvr
+
+reset enable_indexscan;
+reset enable_bitmapscan;
